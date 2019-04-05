@@ -1,16 +1,10 @@
 import pandas as pd
 
+# Info: Steals recorded 73-74 season, Blocks recorded 73-74 season, 3PT recorded since 79
 df = pd.read_csv('nba_draft.csv')
 
-print(df)
+# Fill NaNs with zeros. Alternatives?
+df = df.fillna(0)
 
-# How to clean the data: do we delete samples or impute? Probably just gonna impute
+df.to_csv('nba_draft.csv')  # Export as csv
 
-
-# Info: Steals recorded 73-74 season, Blocks recorded 73-74 season, 3PT recorded since 79
-
-
-
-
-# Dropping columns:
-# df.drop(['Season', 'Lg', 'Player', 'Voting', 'Tm', 'WS/48'], axis=1, inplace=True)

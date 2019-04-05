@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style>
+div.tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: 200px;					
+    height: 20px;					
+    padding: 2px;				
+    font: 12px sans-serif;		
+    background: lightsteelblue;	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;		
+}
+</style>
+
+<!-- Load d3.js -->
+<script src="http://d3js.org/d3.v4.js"></script>
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz"></div>
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 10, right: 30, bottom: 30, left: 40},
+    width = 700 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
+
+
+var x = d3.scaleBand().range([0, width]).paddingInner(.03)
+var y = d3.scaleLinear().range([height, 0])
+
+var xAxis = d3.axisBottom()
+    .scale(x)
+    .tickValues([])
+    .tickSize(0)
+
+var yAxis = d3.axisLeft()
+    .scale(y)
+    .ticks(10)
+    .tickSize(0)
+    .tickPadding(10)
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+// Div for tooltip
+var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+
+// get the data
+d3.csv("nba_draft.csv", function(data) {
+
+    data = data.filter(d => d.Pk == 1);
+
+    data.forEach(function(d) {
+        d.xVal = +d.Year;
+        d.yVal = +d.PTS;
+    });
+
+    x.domain(data.map(function(d) { return d.xVal }));
+    y.domain([0, d3.max(data, function(d) { return d.yVal; })]);
+
+    // add axis
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+        .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", "-.55em")
+        .attr("transform", "rotate(-90)" );
+        
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 5)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Frequency");
+
+    // Add bar chart
+    svg.selectAll("bar")
+        .data(data)
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d) { return x(d.xVal); })
+        .attr("width", x.bandwidth())
+        .attr("y", function(d) { return y(d.yVal); })
+        .attr("height", function(d) { return height - y(d.yVal); })
+        .on("mouseover", function(d) {
+            d3.select(this)
+            	.attr("fill", "red");
+            div.transition()		
+                .duration(200)		
+                .style("opacity", .9)
+                .text(d.Player + ": " + d.PTS)
+                .style("left", (d3.event.pageX) + "px")		
+                .style("top", (d3.event.pageY - 28) + "px");	
+        })
+        .on("mouseout", function(d, i) {
+            d3.select(this)
+            	.attr("fill", "black");
+            div.transition()		
+                .duration(500)		
+                .style("opacity", 0);	
+        })
+
+    /*
+    // iterate through pick #s
+    for (i=1; i<=60; i++) {
+        var currentPk = data.filter(d => d.Pk == i);
+        var pointsAvg = d3.mean(currentPk, function(d) { return d.PTS; });
+        var ws48Avg = d3.mean(currentPk, function(d) { return d["WS/48"]; });
+
+        console.log(i + "th pick avg pts: " + pointsAvg);
+        console.log(i + "th pick avg ws/48: " + ws48Avg);
+    }
+    */
+
+    console.log(data[0]);
+});
+</script>
